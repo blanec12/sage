@@ -29,11 +29,11 @@ class MainScreen(Screen):
     def on_mount(self) -> None:
         sidebar = self.query_one(Sidebar)
         sidebar.set_state(
-            project=Path("sage"),
+            working_dir=Path.cwd().resolve(),
             model="mock-model_o1",
             tokens_used=0,
             tokens_available=200000,
-            active_file=Path("src/sage/ui/screens/main_screen.py"),
+            active_files=[Path("src/sage/ui/screens/main_screen.py")],
             context_files=[Path("PROJECT.md"), Path("ARCHITECTURE.md")],
         )
 
@@ -42,6 +42,7 @@ class MainScreen(Screen):
         if not text:
             return
 
+        sidebar = self.query_one(Sidebar)
         chat = self.query_one(ChatPane)
         composer = self.query_one(Composer)
 
@@ -69,5 +70,17 @@ class MainScreen(Screen):
         if result.kind == "chat":
             chat.add_user_message(text)
             chat.add_assistant_message(text)
+
+        if result.kind == "set_model":
+            sidebar.set_model(result.data["model"])
+            chat.add_assistant_message(result.content)
+            composer.clear()
+            return
+
+        if result.kind == "set_active_file":
+            sidebar.set_active_files(result.data["path"])
+            chat.add_assistant_message(result.content)
+            composer.clear()
+            return
 
         composer.clear()

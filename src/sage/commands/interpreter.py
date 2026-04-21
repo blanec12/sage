@@ -2,6 +2,8 @@ from sage.commands.parser import CommandParser
 from sage.commands.result import CommandResult
 from sage.commands.types import ParsedCommand
 
+from pathlib import Path
+
 
 class CommandInterpreter:
     def __init__(self) -> None:
@@ -27,6 +29,31 @@ class CommandInterpreter:
                 case "help":
                     return CommandResult(
                         kind="info", content="Commands: :q, :clear, :help"
+                    )
+                case "model":
+                    if not parsed.args:
+                        return CommandResult(
+                            kind="error", content="Usage: :model <name>"
+                        )
+
+                    model_name = parsed.args[0]
+                    return CommandResult(
+                        kind="set_model",
+                        content=f"Model set to {model_name}",
+                        data={"model": model_name},
+                    )
+                case "open":
+                    if not parsed.args:
+                        return CommandResult(
+                            kind="error", content="Usage: :open <path>"
+                        )
+                    raw_path = " ".join(parsed.args)
+                    path = Path(raw_path)
+
+                    return CommandResult(
+                        kind="set_active_file",
+                        content=f"Active file set to {path}",
+                        data={"path": path},
                     )
                 case _:
                     return CommandResult(
