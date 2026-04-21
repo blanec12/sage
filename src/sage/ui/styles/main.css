@@ -13,3 +13,16 @@
   height: 3;
   border: solid cyan;
 }
+
+.message {
+  width: 100%;
+  margin: 0 0 1 0;
+}
+
+.message.assistant {
+  border: round magenta;
+}
+
+.message.user {
+  border: round yellow;
+}
