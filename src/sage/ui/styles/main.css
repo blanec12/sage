@@ -1,0 +1,15 @@
+#sidebar {
+  width: 30;
+  height: 1fr;
+  border: solid green;
+}
+
+#chat-pane {
+  height: 1fr;
+  border: solid blue;
+}
+
+#composer {
+  height: 3;
+  border: solid cyan;
+}
