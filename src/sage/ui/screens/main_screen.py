@@ -7,7 +7,14 @@ from sage.ui.widgets.sidebar import Sidebar
 from sage.ui.widgets.chat_pane import ChatPane
 from sage.ui.widgets.composer import Composer
 
-from sage.commands.interpreter import CommandInterpreter
+from sage.core.actions import (
+    AddAssistantMessageAction,
+    AddUserMessageAction,
+    ClearAction,
+    ExitAction,
+    UIAction,
+)
+from sage.core.controller import UIController
 
 from pathlib import Path
 
@@ -17,7 +24,7 @@ class MainScreen(Screen):
 
     def __init__(self) -> None:
         super().__init__()
-        self.interpreter = CommandInterpreter()
+        self.controller = UIController()
 
     def compose(self) -> ComposeResult:
         with Horizontal():
@@ -42,45 +49,31 @@ class MainScreen(Screen):
         if not text:
             return
 
+        actions = self.controller.handle_input(text)
+        for action in actions:
+            self._apply_action(action)
+
+    def _apply_action(self, action: UIAction) -> None:
         sidebar = self.query_one(Sidebar)
         chat = self.query_one(ChatPane)
         composer = self.query_one(Composer)
 
-        result = self.interpreter.handle(text)
-
-        if result.kind == "quit":
+        if isinstance(action, ExitAction):
             self.app.exit()
             return
 
-        if result.kind == "clear":
+        if isinstance(action, ClearAction):
             chat.clear_messages()
             composer.clear()
             return
 
-        if result.kind == "info":
-            chat.add_assistant_message(result.content)
+        if isinstance(action, AddAssistantMessageAction):
+            chat.add_assistant_message(action.text)
             composer.clear()
             return
 
-        if result.kind == "error":
-            chat.add_assistant_message(f"Error: {result.content}")
+        if isinstance(action, AddUserMessageAction):
+            chat.add_user_message(action.text)
             composer.clear()
-            return
 
-        if result.kind == "chat":
-            chat.add_user_message(text)
-            chat.add_assistant_message(text)
-
-        if result.kind == "set_model":
-            sidebar.set_model(result.data["model"])
-            chat.add_assistant_message(result.content)
-            composer.clear()
-            return
-
-        if result.kind == "set_active_file":
-            sidebar.set_active_files(result.data["path"])
-            chat.add_assistant_message(result.content)
-            composer.clear()
-            return
-
-        composer.clear()
+        # composer.clear()
